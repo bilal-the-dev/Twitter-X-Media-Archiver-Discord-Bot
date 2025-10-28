@@ -50,8 +50,8 @@ client.on("messageCreate", async (message) => {
 
     // check perms
 
-    if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageWebhooks))
-      return;
+    // if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageWebhooks))
+    //   return;
 
     const fullLink = match[0];
 
@@ -78,9 +78,9 @@ client.on("messageCreate", async (message) => {
 async function sendTweetToDiscord(data, message) {
   const { media, url } = data.tweet;
 
-  const { author, channel } = message;
+  const { channel } = message;
 
-  const { webhook, isThread } = await getOrCreateWebhook(channel);
+  // const { webhook, isThread } = await getOrCreateWebhook(channel);
 
   // Prepare attachments (buffers)
   const attachments = [];
@@ -97,43 +97,40 @@ async function sendTweetToDiscord(data, message) {
     });
   }
 
-  await webhook.send({
-    username: `${author.username}`,
-    avatarURL: author.displayAvatarURL(),
+  await channel.send({
     content: `${url}`,
     files: attachments,
     flags: MessageFlags.SuppressEmbeds,
-    ...(isThread && { threadId: channel.id }),
   });
 
   await message.delete().catch(console.error);
 }
 
-/**
- *
- * @param {import("discord.js").GuildTextChannelType |  import("discord.js").PublicThreadChannel<false> | import("discord.js").PrivateThreadChannel} ch
- * @returns
- */
-async function getOrCreateWebhook(ch) {
-  let channel = ch;
-  let isThread;
+// /**
+//  *
+//  * @param {import("discord.js").GuildTextChannelType |  import("discord.js").PublicThreadChannel<false> | import("discord.js").PrivateThreadChannel} ch
+//  * @returns
+//  */
+// async function getOrCreateWebhook(ch) {
+//   let channel = ch;
+//   let isThread;
 
-  if (ch.parent?.type === ChannelType.GuildText) {
-    channel = ch.parent;
-    isThread = true;
-  }
+//   if (ch.parent?.type === ChannelType.GuildText) {
+//     channel = ch.parent;
+//     isThread = true;
+//   }
 
-  const webhooks = await channel.fetchWebhooks();
+//   const webhooks = await channel.fetchWebhooks();
 
-  let webhook = webhooks.find((wh) => wh.owner?.id === client.user.id);
+//   let webhook = webhooks.find((wh) => wh.owner?.id === client.user.id);
 
-  if (!webhook) {
-    webhook = await channel.createWebhook({
-      name: "Tweet Relay",
-      avatar: "https://abs.twimg.com/icons/apple-touch-icon-192x192.png",
-    });
-  }
+//   if (!webhook) {
+//     webhook = await channel.createWebhook({
+//       name: "Tweet Relay",
+//       avatar: "https://abs.twimg.com/icons/apple-touch-icon-192x192.png",
+//     });
+//   }
 
-  return { webhook, isThread };
-}
+//   return { webhook, isThread };
+// }
 client.login(process.env.TOKEN);
