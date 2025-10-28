@@ -1,5 +1,11 @@
 import dotenv from "dotenv";
-import { Client, GatewayIntentBits, MessageFlags } from "discord.js";
+import {
+  ChannelType,
+  Client,
+  GatewayIntentBits,
+  MessageFlags,
+  PermissionFlagsBits,
+} from "discord.js";
 
 dotenv.config();
 
@@ -13,9 +19,27 @@ const client = new Client({
 
 client.on("messageCreate", async (message) => {
   try {
-    const { author, content } = message;
+    const { author, content, guild, channel } = message;
 
     if (author.bot) return;
+
+    if (!guild) return;
+
+    if (
+      ![
+        ChannelType.PublicThread,
+        ChannelType.PrivateThread,
+        ChannelType.GuildText,
+      ].includes(channel.type)
+    )
+      return; // only threds (forum + text) and text channel
+
+    // excludef forum threads too
+    if (
+      channel.type === ChannelType.PublicThread &&
+      channel.parent.type === ChannelType.GuildForum
+    )
+      return;
 
     const postRegex =
       /(https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[A-Za-z0-9_]+\/status\/\d+)/i;
@@ -23,6 +47,11 @@ client.on("messageCreate", async (message) => {
     const match = content.match(postRegex);
 
     if (!match) return;
+
+    // check perms
+
+    if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageWebhooks))
+      return;
 
     const fullLink = match[0];
 
@@ -51,7 +80,8 @@ async function sendTweetToDiscord(data, message) {
 
   const { author, channel } = message;
 
-  const webhook = await getOrCreateWebhook(channel);
+  const { webhook, isThread } = await getOrCreateWebhook(channel);
+
   // Prepare attachments (buffers)
   const attachments = [];
 
@@ -73,12 +103,25 @@ async function sendTweetToDiscord(data, message) {
     content: `${url}`,
     files: attachments,
     flags: MessageFlags.SuppressEmbeds,
+    ...(isThread && { threadId: channel.id }),
   });
 
-  await message.delete();
+  await message.delete().catch(console.error);
 }
 
-async function getOrCreateWebhook(channel) {
+/**
+ *
+ * @param {import("discord.js").GuildTextChannelType |  import("discord.js").PublicThreadChannel<false> | import("discord.js").PrivateThreadChannel} ch
+ * @returns
+ */
+async function getOrCreateWebhook(ch) {
+  let channel, isThread;
+
+  if (ch.parent?.type === ChannelType.GuildText) {
+    channel = ch.parent;
+    isThread = true;
+  }
+
   const webhooks = await channel.fetchWebhooks();
 
   let webhook = webhooks.find((wh) => wh.owner?.id === client.user.id);
@@ -90,6 +133,6 @@ async function getOrCreateWebhook(channel) {
     });
   }
 
-  return webhook;
+  return { webhook, isThread };
 }
 client.login(process.env.TOKEN);
