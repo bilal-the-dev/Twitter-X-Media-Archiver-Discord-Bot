@@ -115,7 +115,8 @@ async function sendTweetToDiscord(data, message) {
  * @returns
  */
 async function getOrCreateWebhook(ch) {
-  let channel, isThread;
+  let channel = ch;
+  let isThread;
 
   if (ch.parent?.type === ChannelType.GuildText) {
     channel = ch.parent;
