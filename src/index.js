@@ -76,7 +76,7 @@ client.on("messageCreate", async (message) => {
 });
 
 async function sendTweetToDiscord(data, message) {
-  const { media, url } = data.tweet;
+  const { media, url, text } = data.tweet;
 
   const { channel } = message;
 
@@ -98,7 +98,7 @@ async function sendTweetToDiscord(data, message) {
   }
 
   await channel.send({
-    content: `${url}`,
+    content: `${url}\n${text ? `\`${text}\`` : ""}`,
     files: attachments,
     flags: MessageFlags.SuppressEmbeds,
   });
