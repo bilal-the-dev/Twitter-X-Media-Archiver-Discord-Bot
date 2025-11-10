@@ -112,7 +112,7 @@ async function sendTweetToDiscord(data, message) {
     .join("\n");
 
   await channel.send({
-    content: `${url}\n${formattedText ? `> ${formattedText}` : ""}`,
+    content: `${url}\n${formattedText ? `${formattedText}` : ""}`,
     files: attachments,
     flags: MessageFlags.SuppressEmbeds,
   });
