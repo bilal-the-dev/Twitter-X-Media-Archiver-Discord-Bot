@@ -106,7 +106,10 @@ async function sendTweetToDiscord(data, message) {
     .replace(/[ \t]+$/gm, "")
     // remove multiple blank lines (but keep one \n)
     .replace(/\n\s*\n+/g, "\n")
-    .trim();
+    .trim()
+    .split("\n")
+    .map((line) => `> ${line}`)
+    .join("\n");
 
   await channel.send({
     content: `${url}\n${formattedText ? `> ${formattedText}` : ""}`,
