@@ -76,7 +76,7 @@ client.on("messageCreate", async (message) => {
 });
 
 async function sendTweetToDiscord(data, message) {
-  const { media, url, text } = data.tweet;
+  const { media, url, text = "" } = data.tweet;
 
   const { channel } = message;
 
@@ -97,8 +97,19 @@ async function sendTweetToDiscord(data, message) {
     });
   }
 
+  const formattedText = text
+    // remove hashtags
+    .replace(/#\S+/g, "")
+    // remove decorative divider lines
+    .replace(/[─—–_]+/g, "")
+    // remove trailing spaces on lines
+    .replace(/[ \t]+$/gm, "")
+    // remove multiple blank lines (but keep one \n)
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
+
   await channel.send({
-    content: `${url}\n${text ? `\`${text}\`` : ""}`,
+    content: `${url}\n${formattedText ? `> ${formattedText}` : ""}`,
     files: attachments,
     flags: MessageFlags.SuppressEmbeds,
   });
