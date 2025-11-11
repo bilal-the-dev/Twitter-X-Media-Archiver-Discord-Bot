@@ -108,11 +108,11 @@ async function sendTweetToDiscord(data, message) {
     .replace(/\n\s*\n+/g, "\n")
     .trim()
     .split("\n")
-    .map((line) => `> ${line}`)
+    .map((line) => (line ? `> ${line}` : ""))
     .join("\n");
 
   await channel.send({
-    content: `${url}\n${formattedText ? `${formattedText}` : ""}`,
+    content: `${url.split("?")[0]}\n${formattedText ? `${formattedText}` : ""}`,
     files: attachments,
     flags: MessageFlags.SuppressEmbeds,
   });
