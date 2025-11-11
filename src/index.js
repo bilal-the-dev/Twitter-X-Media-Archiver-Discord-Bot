@@ -85,15 +85,15 @@ async function sendTweetToDiscord(data, message) {
   // Prepare attachments (buffers)
   const attachments = [];
 
-  if (!media?.photos?.length) return;
+  const combinedMedia = [...(media?.photos ?? []), ...(media?.videos ?? [])];
 
-  for (const [i, photo] of media.photos.entries()) {
-    const res = await fetch(photo.url);
+  for (const [i, media] of combinedMedia.entries()) {
+    const res = await fetch(media.url);
     const buffer = Buffer.from(await res.arrayBuffer());
 
     attachments.push({
       attachment: buffer,
-      name: `tweet_image_${i + 1}.webp`,
+      name: `tweet_${i + 1}.${media.type === "photo" ? "webp" : "mp4"}`,
     });
   }
 
